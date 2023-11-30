@@ -24,12 +24,28 @@ export const {
     }),
   ],
   callbacks: {
-    //Ususally not needed
+    // Ususally not needed
     async session({ session, user }: any) {
+      console.log("session", session);
       if (session && user) {
         session.user.id = user.id;
       }
       return session;
     },
+    // authorized({ auth, request: { nextUrl } }) {
+    //   console.log(!!auth?.user, "auth");
+    //   const isLoggedIn = !!auth?.user;
+    //   console.log("log", isLoggedIn);
+    //   const isOnTopic = nextUrl.pathname.startsWith("/topics");
+    //   console.log(isOnTopic, "isOnDashboard");
+    //   if (isOnTopic) {
+    //     if (isLoggedIn) return true;
+    //     // return false; // Redirect unauthenticated users to login page
+    //     return Response.redirect(new URL("/api/auth/signin", nextUrl));
+    //   } else if (isLoggedIn) {
+    //     return Response.redirect(new URL("/topics", nextUrl));
+    //   }
+    //   return true;
+    // },
   },
 });
