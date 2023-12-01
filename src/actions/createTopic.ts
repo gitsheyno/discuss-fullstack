@@ -1,7 +1,12 @@
 "use server";
-import { z } from "zod";
 
+import type { Topic } from "@prisma/client";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { z } from "zod";
 import { auth } from "@/auth";
+import prisma from "@/db";
+import paths from "@/paths";
 
 const createTopicSchema = z.object({
   name: z
@@ -20,6 +25,7 @@ interface CreateTopicFormState {
     _form?: string[];
   };
 }
+
 export async function createTopic(
   formState: CreateTopicFormState,
   formData: FormData
@@ -29,24 +35,45 @@ export async function createTopic(
     description: formData.get("description"),
   });
 
-  const session = await auth();
-  if (!session || !session.user) {
-    return {
-      errors: {
-        _form: ["You must sign in first"],
-      },
-    };
-  }
-
   if (!result.success) {
     return {
       errors: result.error.flatten().fieldErrors,
     };
   }
 
-  return {
-    errors: {},
-  };
+  const session = await auth();
+  if (!session || !session.user) {
+    return {
+      errors: {
+        _form: ["You must be signed in to do this."],
+      },
+    };
+  }
 
-  // TODO: revalidate the homepage
+  let topic: Topic;
+  try {
+    topic = await prisma.topic.create({
+      data: {
+        slug: result.data.name,
+        description: result.data.description,
+      },
+    });
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      return {
+        errors: {
+          _form: [err.message],
+        },
+      };
+    } else {
+      return {
+        errors: {
+          _form: ["Something went wrong"],
+        },
+      };
+    }
+  }
+
+  revalidatePath("/");
+  redirect(paths.topicShowPath(topic.slug));
 }
