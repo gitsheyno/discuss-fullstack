@@ -6,6 +6,7 @@ import prisma from "@/db";
 import { notFound } from "next/navigation";
 
 export default async function PostShow({ postid }: PostShowProps) {
+  await new Promise((resolve) => setTimeout(resolve, 2500));
   const post = await prisma.post.findFirst({
     where: {
       id: postid,
