@@ -7,6 +7,19 @@ export type PostWithData = Post & {
   _count: { comments: number };
 };
 
+export function fetchPostsBySearchTerm(term: string): Promise<PostWithData[]> {
+  return prisma.post.findMany({
+    include: {
+      topic: { select: { slug: true } },
+      user: { select: { name: true } },
+      _count: { select: { comments: true } },
+    },
+    where: {
+      OR: [{ title: { contains: term } }, { content: { contains: term } }],
+    },
+  });
+}
+
 export function fetchPostsBuTopicSlug(slug: string): Promise<PostWithData[]> {
   return prisma.post.findMany({
     where: {
